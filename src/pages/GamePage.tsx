@@ -50,11 +50,10 @@ export default function GamePage() {
   const elimReversed = [...game.eliminationOrder].reverse()
   const allSorted = [...sortedActive, ...elimReversed]
 
-  const placementLabel = (player: string) => {
+  const placementLabel = (player: string): string | null => {
     if (!eliminated.has(player)) return null
-    const place = game.eliminationOrder.length - game.eliminationOrder.indexOf(player)
-    const placeLabels: Record<number, string> = { 1: '1.', 2: '2.', 3: '3.', 4: '4.', 5: '5.', 6: '6.' }
-    return placeLabels[place] ?? `${place}.`
+    const place = game.players.length - game.eliminationOrder.indexOf(player)
+    return `${place}.`
   }
 
   return (

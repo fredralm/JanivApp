@@ -22,6 +22,13 @@ vi.mock('../storage', () => ({
   getGroups: vi.fn(() => [{ id: 'grp1', name: 'Testgruppe', players: ['Anna', 'Bo'] }]),
 }))
 
+import * as storage from '../storage'
+
+beforeEach(() => {
+  vi.mocked(storage.getGames).mockReturnValue([mockGame])
+  vi.mocked(storage.saveGames).mockReset()
+})
+
 function renderGame(gameId = 'g1') {
   return render(
     <MemoryRouter initialEntries={[`/spill/${gameId}`]}>

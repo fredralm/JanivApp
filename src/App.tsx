@@ -1,3 +1,14 @@
+import { Routes, Route } from 'react-router-dom'
+import HomePage from './pages/HomePage'
+import GamePage from './pages/GamePage'
+import StatsPage from './pages/StatsPage'
+
 export default function App() {
-  return <div>Janiv Score</div>
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/spill/:gameId" element={<GamePage />} />
+      <Route path="/statistikk" element={<StatsPage />} />
+    </Routes>
+  )
 }

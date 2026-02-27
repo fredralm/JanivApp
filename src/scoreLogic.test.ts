@@ -30,7 +30,7 @@ describe('applyRoundScore — normal mode', () => {
     expect(applyRoundScore(180, 30, mode)).toBe(210)
   })
 
-  it('does not reduce to 50 when total is 100 but came from going over then reducing (edge: 99+1=100)', () => {
+  it('reduces to 50 when reaching exactly 100 regardless of starting total (edge: 99+1=100)', () => {
     expect(applyRoundScore(99, 1, mode)).toBe(50)
   })
 })

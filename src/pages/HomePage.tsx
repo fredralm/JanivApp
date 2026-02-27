@@ -6,7 +6,6 @@ import type { Group, Game, GameMode } from '../types'
 export default function HomePage() {
   const navigate = useNavigate()
   const [groups, setGroups] = useState<Group[]>(getGroups)
-  const [games] = useState<Game[]>(getGames)
   const [showForm, setShowForm] = useState(false)
   const [groupName, setGroupName] = useState('')
   const [players, setPlayers] = useState<string[]>([])
@@ -54,7 +53,7 @@ export default function HomePage() {
   }
 
   function getActiveGame(groupId: string) {
-    return games.find(g => g.groupId === groupId && g.status === 'active')
+    return getGames().find(g => g.groupId === groupId && g.status === 'active')
   }
 
   return (
@@ -150,7 +149,9 @@ export default function HomePage() {
           const a = document.createElement('a')
           a.href = url
           a.download = `janiv-eksport-${new Date().toISOString().slice(0, 10)}.json`
+          document.body.appendChild(a)
           a.click()
+          document.body.removeChild(a)
           URL.revokeObjectURL(url)
         }}>
           Eksporter data
@@ -164,6 +165,10 @@ export default function HomePage() {
             reader.onload = ev => {
               try {
                 const imported = JSON.parse(ev.target?.result as string)
+                if (!Array.isArray(imported.groups) || !Array.isArray(imported.games)) {
+                  alert('Ugyldig fil — mangler groups/games')
+                  return
+                }
                 const existingGroups = getGroups()
                 const existingGames = getGames()
                 const mergedGroups = [

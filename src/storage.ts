@@ -5,7 +5,8 @@ const GAMES_KEY = 'janiv_games'
 
 export function getGroups(): Group[] {
   const raw = localStorage.getItem(GROUPS_KEY)
-  return raw ? JSON.parse(raw) : []
+  if (!raw) return []
+  try { return JSON.parse(raw) } catch { return [] }
 }
 
 export function saveGroups(groups: Group[]): void {
@@ -14,7 +15,8 @@ export function saveGroups(groups: Group[]): void {
 
 export function getGames(): Game[] {
   const raw = localStorage.getItem(GAMES_KEY)
-  return raw ? JSON.parse(raw) : []
+  if (!raw) return []
+  try { return JSON.parse(raw) } catch { return [] }
 }
 
 export function saveGames(games: Game[]): void {

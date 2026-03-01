@@ -5,14 +5,17 @@
 }
 
 :root {
-  --bg: #1a1a2e;
-  --surface: #16213e;
-  --surface2: #0f3460;
-  --accent: #e94560;
-  --text: #eaeaea;
-  --text-muted: #888;
-  --radius: 10px;
+  --bg: #e0f2fe;
+  --surface: #ffffff;
+  --surface2: #f0f9ff;
+  --accent: #0284c7;
+  --danger: #ef4444;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: rgba(0, 0, 0, 0.08);
+  --radius: 14px;
   --gap: 16px;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
 }
 
 body {
@@ -26,7 +29,7 @@ body {
 main {
   max-width: 480px;
   margin: 0 auto;
-  padding: var(--gap);
+  padding: 20px var(--gap) 48px;
 }
 
 button,
@@ -39,37 +42,38 @@ label.btn-ghost {
   padding: 10px 18px;
   font-size: 15px;
   font-weight: 600;
+  font-family: inherit;
 }
 
 .btn-primary {
   background: var(--accent);
   color: white;
-  width: 100%;
-  padding: 14px;
+  padding: 13px;
 }
 
 .btn-secondary {
-  background: var(--surface2);
+  background: var(--surface);
   color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .btn-ghost {
   background: transparent;
   color: var(--text-muted);
-  text-decoration: underline;
 }
 
-input {
-  background: var(--surface2);
-  border: 1px solid transparent;
+input, select {
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text);
   font-size: 16px;
   padding: 10px 14px;
   width: 100%;
+  font-family: inherit;
 }
 
-input:focus {
+input:focus, select:focus {
   outline: none;
   border-color: var(--accent);
 }
@@ -78,4 +82,15 @@ input:focus {
   background: var(--surface);
   border-radius: var(--radius);
   padding: var(--gap);
+  box-shadow: var(--shadow);
+}
+
+.section-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  padding: 0 4px;
 }

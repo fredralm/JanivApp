@@ -5,6 +5,7 @@ export interface Group {
   id: string
   name: string
   players: string[]
+  color?: string
 }
 
 export interface Round {
@@ -15,7 +16,8 @@ export interface Game {
   id: string
   groupId: string
   date: string               // ISO date string
-  players: string[]          // snapshot of players at game start
+  players: string[]
+  color?: string          // snapshot of players at game start
   mode: GameMode
   rounds: Round[]
   status: GameStatus

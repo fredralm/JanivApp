@@ -34,7 +34,7 @@ describe('HomePage', () => {
 
   it('shows "Ny gruppe" button', () => {
     renderHome()
-    expect(screen.getByText('Ny gruppe')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /ny gruppe/i })).toBeInTheDocument()
   })
 
   it('shows empty state when no groups', () => {
@@ -53,13 +53,13 @@ describe('HomePage', () => {
 
   it('shows create group form after clicking "Ny gruppe"', () => {
     renderHome()
-    fireEvent.click(screen.getByText('Ny gruppe'))
+    fireEvent.click(screen.getByRole('button', { name: /ny gruppe/i }))
     expect(screen.getByPlaceholderText(/gruppenavn/i)).toBeInTheDocument()
   })
 
   it('can create a group with players', () => {
     renderHome()
-    fireEvent.click(screen.getByText('Ny gruppe'))
+    fireEvent.click(screen.getByRole('button', { name: /ny gruppe/i }))
 
     fireEvent.change(screen.getByPlaceholderText(/gruppenavn/i), {
       target: { value: 'Vennegjengen' }

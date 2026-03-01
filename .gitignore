@@ -26,3 +26,4 @@ dist-ssr
 # Claude code
 **/.claude/settings.local.json
 **/.claude/worktrees/
+**/.claude/launch.json

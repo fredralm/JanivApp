@@ -12,7 +12,7 @@ export default defineConfig({
         short_name: 'Janiv',
         description: 'Poengsporing for Janiv',
         theme_color: '#0284c7',
-        background_color: '#bae6fd',
+        background_color: '#0ea5e9',
         display: 'standalone',
         start_url: '/',
         lang: 'nb',

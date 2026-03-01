@@ -29,19 +29,21 @@ export default function GamePage() {
   }
 
   function submitRound() {
+    if (!game) return
     const roundScores: Record<string, number> = {}
     for (const player of activePlayers) {
       roundScores[player] = parseInt(roundInputs[player] || '0', 10) || 0
     }
-    const updated = processRound(game!, roundScores)
+    const updated = processRound(game, roundScores)
     saveGame(updated)
     setRoundInputs({})
     setShowRoundEntry(false)
   }
 
   function endGameEarly() {
+    if (!game) return
     if (!confirm('Avslutt spillet uten vinner?')) return
-    const updated: Game = { ...game!, status: 'finished' }
+    const updated: Game = { ...game, status: 'finished' }
     saveGame(updated)
   }
 

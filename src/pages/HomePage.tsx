@@ -156,7 +156,7 @@ export default function HomePage() {
         }}>
           Eksporter data
         </button>
-        <label className="btn-secondary" style={{ cursor: 'pointer' }}>
+        <label className="btn-secondary" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
           Importer data
           <input type="file" accept=".json" style={{ display: 'none' }} onChange={e => {
             const file = e.target.files?.[0]
@@ -208,14 +208,14 @@ export default function HomePage() {
               <button className="btn-primary" onClick={() => { startGame(modeModal, 'normal'); setModeModal(null) }}>
                 Normalt spill
                 <span style={{ display: 'block', fontSize: 13, fontWeight: 400, opacity: 0.8 }}>
-                  Ute ved over 200 poeng
+                  Spill opp til 200 poeng
                 </span>
               </button>
               <button className="btn-secondary" onClick={() => { startGame(modeModal, 'short'); setModeModal(null) }}
                 style={{ padding: 14 }}>
                 Kort spill
                 <span style={{ display: 'block', fontSize: 13, fontWeight: 400, opacity: 0.8 }}>
-                  Ute ved over 100 poeng
+                  Spill opp til 100 poeng
                 </span>
               </button>
               <button className="btn-ghost" onClick={() => setModeModal(null)}>Avbryt</button>

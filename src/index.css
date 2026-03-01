@@ -29,7 +29,10 @@ main {
   padding: var(--gap);
 }
 
-button {
+button,
+label.btn-primary,
+label.btn-secondary,
+label.btn-ghost {
   cursor: pointer;
   border: none;
   border-radius: var(--radius);

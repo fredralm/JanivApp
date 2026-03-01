@@ -33,7 +33,7 @@ export default function GamePage() {
     for (const player of activePlayers) {
       roundScores[player] = parseInt(roundInputs[player] || '0', 10) || 0
     }
-    const updated = processRound(game, roundScores)
+    const updated = processRound(game!, roundScores)
     saveGame(updated)
     setRoundInputs({})
     setShowRoundEntry(false)
@@ -41,7 +41,7 @@ export default function GamePage() {
 
   function endGameEarly() {
     if (!confirm('Avslutt spillet uten vinner?')) return
-    const updated: Game = { ...game, status: 'finished' }
+    const updated: Game = { ...game!, status: 'finished' }
     saveGame(updated)
   }
 

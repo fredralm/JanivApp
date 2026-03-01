@@ -78,7 +78,7 @@ export default function StatsPage() {
         <>
           <h2 style={{ marginBottom: 4 }}>{selectedGroup.name}</h2>
           <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>
-            {totalGames} {totalGames === 1 ? 'spill' : 'spill'} spilt
+            {totalGames} spill spilt
           </p>
 
           {stats.length === 0 ? (

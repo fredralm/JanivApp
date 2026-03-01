@@ -294,7 +294,7 @@ export default function HomePage() {
               Er du sikker på at du vil slette <strong>{deleteConfirm.name}</strong>?
             </p>
             <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 20 }}>
-              Dette vil permanent slette gruppen og all spillhistorikk tilknyttet den.
+              Dette vil slette gruppen og all spillhistorikk tilknyttet den. Kan ikke angres.
             </p>
             <div style={{ display: 'flex', gap: 8 }}>
               <button

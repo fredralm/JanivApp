@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { getGroups, getGames } from '../storage'
+import { getGroups, saveGroups, getGames, saveGames } from '../storage'
 import { DEFAULT_GROUP_COLOR } from '../colors'
-import type { Group } from '../types'
+import type { Group, Game } from '../types'
 
 interface PlayerStats {
   name: string
@@ -11,9 +11,8 @@ interface PlayerStats {
   shortWins: number
 }
 
-function computeStats(groupId: string): PlayerStats[] {
+function computeStats(groupId: string, groups: Group[]): PlayerStats[] {
   const games = getGames().filter(g => g.groupId === groupId && g.status === 'finished')
-  const groups = getGroups()
   const group = groups.find(g => g.id === groupId)
   if (!group) return []
 
@@ -34,18 +33,90 @@ function computeStats(groupId: string): PlayerStats[] {
   return Object.values(statsMap).sort((a, b) => b.totalWins - a.totalWins)
 }
 
+/** Rename a player string across all game records for a given group. */
+function renamePlayerInGames(games: Game[], groupId: string, oldName: string, newName: string): Game[] {
+  return games.map(game => {
+    if (game.groupId !== groupId) return game
+    return {
+      ...game,
+      players: game.players.map(p => p === oldName ? newName : p),
+      rounds: game.rounds.map(round => {
+        const newScores: Record<string, number> = {}
+        for (const [k, v] of Object.entries(round.scores)) {
+          newScores[k === oldName ? newName : k] = v
+        }
+        return { ...round, scores: newScores }
+      }),
+      eliminationOrder: game.eliminationOrder.map(p => p === oldName ? newName : p),
+      finalPlacements: game.finalPlacements.map(p => p === oldName ? newName : p),
+    }
+  })
+}
+
 export default function StatsPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const initialGroup = searchParams.get('gruppe') ?? ''
   const [selectedGroupId, setSelectedGroupId] = useState(initialGroup)
+  const [groups, setGroups] = useState<Group[]>(getGroups)
 
-  const groups = getGroups()
+  // Edit modal state
+  const [editModal, setEditModal] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editPlayers, setEditPlayers] = useState<string[]>([])
+
   const selectedGroup = groups.find(g => g.id === selectedGroupId) as Group | undefined
   const selectedColor = selectedGroup?.color ?? DEFAULT_GROUP_COLOR
-  const stats = selectedGroupId ? computeStats(selectedGroupId) : []
+  const stats = selectedGroupId ? computeStats(selectedGroupId, groups) : []
   const games = getGames().filter(g => g.groupId === selectedGroupId && g.status === 'finished')
   const totalGames = games.length
+
+  function openEdit() {
+    if (!selectedGroup) return
+    setEditName(selectedGroup.name)
+    setEditPlayers([...selectedGroup.players])
+    setEditModal(true)
+  }
+
+  function saveEdit() {
+    if (!selectedGroup) return
+    const trimmedName = editName.trim()
+    if (!trimmedName) return
+    const trimmedPlayers = editPlayers.map(p => p.trim()).filter(Boolean)
+    if (trimmedPlayers.length < 2) return
+
+    // Build rename map for players whose names changed
+    const renames: Array<[string, string]> = []
+    for (let i = 0; i < selectedGroup.players.length; i++) {
+      const oldName = selectedGroup.players[i]
+      const newName = trimmedPlayers[i] ?? oldName
+      if (newName !== oldName) renames.push([oldName, newName])
+    }
+
+    // Update games with renames
+    let updatedGames = getGames()
+    for (const [oldName, newName] of renames) {
+      updatedGames = renamePlayerInGames(updatedGames, selectedGroup.id, oldName, newName)
+    }
+    saveGames(updatedGames)
+
+    // Update group
+    const updatedGroup: Group = {
+      ...selectedGroup,
+      name: trimmedName,
+      players: trimmedPlayers,
+    }
+    const updatedGroups = groups.map(g => g.id === selectedGroup.id ? updatedGroup : g)
+    saveGroups(updatedGroups)
+    setGroups(updatedGroups)
+    setEditModal(false)
+  }
+
+  const overlayStyle: React.CSSProperties = {
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+    zIndex: 100,
+  }
 
   return (
     <main>
@@ -105,7 +176,14 @@ export default function StatsPage() {
             }}>
               {selectedGroup.name[0]?.toUpperCase()}
             </div>
-            <h2>{selectedGroup.name}</h2>
+            <h2 style={{ flex: 1 }}>{selectedGroup.name}</h2>
+            <button
+              className="btn-secondary"
+              style={{ fontSize: 13, padding: '6px 14px', borderRadius: 10 }}
+              onClick={openEdit}
+            >
+              Rediger
+            </button>
           </div>
           <p style={{ color: 'var(--text-muted)', marginBottom: 16, paddingLeft: 46 }}>
             {totalGames} spill spilt
@@ -142,6 +220,49 @@ export default function StatsPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Edit modal */}
+      {editModal && selectedGroup && (
+        <div style={overlayStyle}>
+          <div className="card" style={{ width: '100%', maxWidth: 400 }}>
+            <h2 style={{ marginBottom: 16 }}>Rediger gruppe</h2>
+
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }}>Gruppenavn</p>
+            <input
+              value={editName}
+              onChange={e => setEditName(e.target.value)}
+              style={{ marginBottom: 20 }}
+            />
+
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>Spillere</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+              {editPlayers.map((player, i) => (
+                <input
+                  key={i}
+                  value={player}
+                  onChange={e => {
+                    const updated = [...editPlayers]
+                    updated[i] = e.target.value
+                    setEditPlayers(updated)
+                  }}
+                />
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                className="btn-primary"
+                style={{ flex: 1 }}
+                onClick={saveEdit}
+                disabled={!editName.trim() || editPlayers.filter(p => p.trim()).length < 2}
+              >
+                Lagre
+              </button>
+              <button className="btn-ghost" onClick={() => setEditModal(false)}>Avbryt</button>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   )

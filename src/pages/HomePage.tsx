@@ -132,7 +132,12 @@ export default function HomePage() {
           const activeGame = getActiveGame(group.id)
           const color = group.color ?? DEFAULT_GROUP_COLOR
           return (
-            <div key={group.id} className="card">
+            <div
+              key={group.id}
+              className="card"
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate(`/statistikk?gruppe=${group.id}`)}
+            >
               <div style={{ display: 'flex', gap: 14, marginBottom: 14, alignItems: 'center' }}>
                 {/* Colored avatar */}
                 <div style={{
@@ -167,23 +172,16 @@ export default function HomePage() {
                     flex: 1, background: color, color: 'white', borderRadius: 10,
                     padding: '9px 14px', fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer',
                   }}
-                  onClick={() => activeGame ? navigate(`/spill/${activeGame.id}`) : setModeModal(group)}
+                  onClick={e => { e.stopPropagation(); activeGame ? navigate(`/spill/${activeGame.id}`) : setModeModal(group) }}
                 >
                   {activeGame ? 'Fortsett spill' : 'Start spill'}
-                </button>
-                <button
-                  className="btn-secondary"
-                  style={{ borderRadius: 10, padding: '9px 14px', fontSize: 14 }}
-                  onClick={() => navigate(`/statistikk?gruppe=${group.id}`)}
-                >
-                  Statistikk
                 </button>
                 <button
                   style={{
                     background: 'transparent', border: 'none', color: 'var(--danger)',
                     fontSize: 14, fontWeight: 600, padding: '9px 10px', cursor: 'pointer', borderRadius: 10,
                   }}
-                  onClick={() => setDeleteConfirm(group)}
+                  onClick={e => { e.stopPropagation(); setDeleteConfirm(group) }}
                 >
                   Slett
                 </button>

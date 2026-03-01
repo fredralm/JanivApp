@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Claude code
+**/.claude/settings.local.json
+**/.claude/worktrees/

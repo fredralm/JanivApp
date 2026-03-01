@@ -11,6 +11,9 @@ export default function HomePage() {
   const [players, setPlayers] = useState<string[]>([])
   const [playerInput, setPlayerInput] = useState('')
   const [modeModal, setModeModal] = useState<Group | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<Group | null>(null)
+  const [exportModal, setExportModal] = useState(false)
+  const [exportSelected, setExportSelected] = useState<Set<string>>(new Set())
 
   function addPlayer() {
     const name = playerInput.trim()
@@ -35,6 +38,15 @@ export default function HomePage() {
     setShowForm(false)
   }
 
+  function deleteGroup(group: Group) {
+    const updatedGroups = groups.filter(g => g.id !== group.id)
+    const updatedGames = getGames().filter(g => g.groupId !== group.id)
+    saveGroups(updatedGroups)
+    saveGames(updatedGames)
+    setGroups(updatedGroups)
+    setDeleteConfirm(null)
+  }
+
   function startGame(group: Group, mode: GameMode) {
     const newGame: Game = {
       id: crypto.randomUUID(),
@@ -54,6 +66,42 @@ export default function HomePage() {
 
   function getActiveGame(groupId: string) {
     return getGames().find(g => g.groupId === groupId && g.status === 'active')
+  }
+
+  function openExportModal() {
+    setExportSelected(new Set(groups.map(g => g.id)))
+    setExportModal(true)
+  }
+
+  function toggleExportGroup(id: string) {
+    setExportSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function doExport() {
+    const selectedGroups = getGroups().filter(g => exportSelected.has(g.id))
+    const selectedIds = new Set(selectedGroups.map(g => g.id))
+    const selectedGames = getGames().filter(g => selectedIds.has(g.groupId))
+    const data = { groups: selectedGroups, games: selectedGames }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `janiv-eksport-${new Date().toISOString().slice(0, 10)}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    setExportModal(false)
+  }
+
+  const overlayStyle: React.CSSProperties = {
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24
   }
 
   return (
@@ -93,6 +141,13 @@ export default function HomePage() {
                   onClick={() => navigate(`/statistikk?gruppe=${group.id}`)}
                 >
                   Statistikk
+                </button>
+                <button
+                  className="btn-ghost"
+                  style={{ color: 'var(--accent)', textDecoration: 'none' }}
+                  onClick={() => setDeleteConfirm(group)}
+                >
+                  Slett
                 </button>
               </div>
             </div>
@@ -142,18 +197,7 @@ export default function HomePage() {
 
       {/* Export/Import */}
       <div style={{ marginTop: 32, display: 'flex', gap: 12 }}>
-        <button className="btn-secondary" onClick={() => {
-          const data = { groups: getGroups(), games: getGames() }
-          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = `janiv-eksport-${new Date().toISOString().slice(0, 10)}.json`
-          document.body.appendChild(a)
-          a.click()
-          document.body.removeChild(a)
-          URL.revokeObjectURL(url)
-        }}>
+        <button className="btn-secondary" onClick={openExportModal}>
           Eksporter data
         </button>
         <label className="btn-secondary" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -196,12 +240,79 @@ export default function HomePage() {
         </label>
       </div>
 
+      {/* Export modal */}
+      {exportModal && (
+        <div style={overlayStyle}>
+          <div className="card" style={{ width: '100%', maxWidth: 400 }}>
+            <h2 style={{ marginBottom: 4 }}>Eksporter grupper</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 16 }}>
+              Velg hvilke grupper som skal eksporteres
+            </p>
+            {groups.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>Ingen grupper å eksportere.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+                {groups.map(group => (
+                  <label key={group.id} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={exportSelected.has(group.id)}
+                      onChange={() => toggleExportGroup(group.id)}
+                      style={{ width: 18, height: 18, accentColor: 'var(--accent)', cursor: 'pointer' }}
+                    />
+                    <span>
+                      <strong>{group.name}</strong>
+                      <span style={{ color: 'var(--text-muted)', fontSize: 13, marginLeft: 8 }}>
+                        {group.players.join(', ')}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                className="btn-primary"
+                onClick={doExport}
+                disabled={exportSelected.size === 0}
+                style={{ opacity: exportSelected.size === 0 ? 0.5 : 1 }}
+              >
+                Last ned
+              </button>
+              <button className="btn-ghost" onClick={() => setExportModal(false)}>Avbryt</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      {deleteConfirm && (
+        <div style={overlayStyle}>
+          <div className="card" style={{ width: '100%', maxWidth: 400 }}>
+            <h2 style={{ marginBottom: 8 }}>Slett gruppe</h2>
+            <p style={{ marginBottom: 8 }}>
+              Er du sikker på at du vil slette <strong>{deleteConfirm.name}</strong>?
+            </p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 20 }}>
+              Dette vil permanent slette gruppen og all spillhistorikk tilknyttet den.
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                className="btn-primary"
+                style={{ background: 'var(--accent)' }}
+                onClick={() => deleteGroup(deleteConfirm)}
+              >
+                Ja, slett
+              </button>
+              <button className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Avbryt</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Game mode modal */}
       {modeModal && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24
-        }}>
+        <div style={overlayStyle}>
           <div className="card" style={{ width: '100%', maxWidth: 400 }}>
             <h2 style={{ marginBottom: 16 }}>Velg spillmodus</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

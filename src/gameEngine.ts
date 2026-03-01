@@ -47,6 +47,10 @@ export function processRound(game: Game, roundScores: Record<string, number>): G
     }
   }
 
+  // Among players eliminated in the same round, the one who scored the most
+  // gets the worst placement (goes first in eliminationOrder = last place).
+  newEliminations.sort((a, b) => (roundScores[b] ?? 0) - (roundScores[a] ?? 0))
+
   const updatedEliminationOrder = [...game.eliminationOrder, ...newEliminations]
   const stillActive = activePlayers.filter(p => !newEliminations.includes(p))
 

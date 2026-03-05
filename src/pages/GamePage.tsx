@@ -225,9 +225,9 @@ export default function GamePage() {
       {showRoundEntry && (
         <div style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <div className="card" style={{ width: '100%', maxWidth: 480, borderRadius: '20px 20px 0 0', padding: 24 }}>
+          <div className="card" style={{ width: 'calc(100% - 32px)', maxWidth: 480, borderRadius: 20, padding: 24 }}>
             <h2 style={{ marginBottom: 16 }}>Runde {roundNumber}</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
               {sortedActive.map(player => (

@@ -14,6 +14,7 @@ export default function GamePage() {
   const groups = getGroups()
   const [showRoundEntry, setShowRoundEntry] = useState(false)
   const [showUndoConfirm, setShowUndoConfirm] = useState(false)
+  const [showEndConfirm, setShowEndConfirm] = useState(false)
   const [roundInputs, setRoundInputs] = useState<Record<string, string>>({})
 
   if (!game) return <main><p>Spill ikke funnet.</p></main>
@@ -44,10 +45,14 @@ export default function GamePage() {
   }
 
   function endGameEarly() {
+    setShowEndConfirm(true)
+  }
+
+  function confirmEnd() {
     if (!game) return
-    if (!confirm('Avslutt spillet uten vinner?')) return
     const updated: Game = { ...game, status: 'finished' }
     saveGame(updated)
+    setShowEndConfirm(false)
   }
 
   function undoRound() {
@@ -186,6 +191,31 @@ export default function GamePage() {
                 Bekreft
               </button>
               <button className="btn-ghost" onClick={() => setShowUndoConfirm(false)}>Avbryt</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* End game confirmation modal */}
+      {showEndConfirm && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        }}>
+          <div className="card" style={{ width: '100%', maxWidth: 480, borderRadius: '20px 20px 0 0', padding: 24 }}>
+            <h2 style={{ marginBottom: 8 }}>Avslutt spill</h2>
+            <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>Er du sikker på at du vil avslutte spillet uten vinner?</p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                style={{
+                  flex: 1, background: 'var(--danger)', color: 'white', border: 'none',
+                  borderRadius: 'var(--radius)', padding: 13, fontSize: 15, fontWeight: 600, cursor: 'pointer',
+                }}
+                onClick={confirmEnd}
+              >
+                Bekreft
+              </button>
+              <button className="btn-ghost" onClick={() => setShowEndConfirm(false)}>Avbryt</button>
             </div>
           </div>
         </div>

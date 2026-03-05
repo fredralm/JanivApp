@@ -13,6 +13,7 @@ export default function GamePage() {
   )
   const groups = getGroups()
   const [showRoundEntry, setShowRoundEntry] = useState(false)
+  const [showUndoConfirm, setShowUndoConfirm] = useState(false)
   const [roundInputs, setRoundInputs] = useState<Record<string, string>>({})
 
   if (!game) return <main><p>Spill ikke funnet.</p></main>
@@ -50,9 +51,13 @@ export default function GamePage() {
   }
 
   function undoRound() {
+    setShowUndoConfirm(true)
+  }
+
+  function confirmUndo() {
     if (!game) return
-    if (!confirm('Angre siste runde?')) return
     saveGame(undoLastRound(game))
+    setShowUndoConfirm(false)
   }
 
   const sortedActive = [...activePlayers].sort((a, b) => scores[a] - scores[b])
@@ -159,6 +164,31 @@ export default function GamePage() {
         <button className="btn-ghost" style={{ color: 'rgba(255,255,255,0.9)', width: '100%' }} onClick={undoRound}>
           Angre siste runde
         </button>
+      )}
+
+      {/* Undo confirmation modal */}
+      {showUndoConfirm && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        }}>
+          <div className="card" style={{ width: '100%', maxWidth: 480, borderRadius: '20px 20px 0 0', padding: 24 }}>
+            <h2 style={{ marginBottom: 8 }}>Angre siste runde</h2>
+            <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>Er du sikker på at du vil angre?</p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                style={{
+                  flex: 1, background: 'var(--danger)', color: 'white', border: 'none',
+                  borderRadius: 'var(--radius)', padding: 13, fontSize: 15, fontWeight: 600, cursor: 'pointer',
+                }}
+                onClick={confirmUndo}
+              >
+                Bekreft
+              </button>
+              <button className="btn-ghost" onClick={() => setShowUndoConfirm(false)}>Avbryt</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Round entry panel */}

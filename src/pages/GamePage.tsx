@@ -115,7 +115,7 @@ export default function GamePage() {
       )}
 
       {/* Player list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24, overflowY: 'auto', maxHeight: 'calc(100dvh - 340px)' }}>
         {allSorted.map(player => {
           const isOut = eliminated.has(player)
           const place = placementLabel(player)
@@ -175,9 +175,9 @@ export default function GamePage() {
       {showUndoConfirm && (
         <div style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <div className="card" style={{ width: '100%', maxWidth: 480, borderRadius: '20px 20px 0 0', padding: 24 }}>
+          <div className="card" style={{ width: 'calc(100% - 32px)', maxWidth: 480, borderRadius: 20, padding: 24 }}>
             <h2 style={{ marginBottom: 8 }}>Angre siste runde</h2>
             <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>Er du sikker på at du vil angre?</p>
             <div style={{ display: 'flex', gap: 10 }}>
@@ -200,9 +200,9 @@ export default function GamePage() {
       {showEndConfirm && (
         <div style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <div className="card" style={{ width: '100%', maxWidth: 480, borderRadius: '20px 20px 0 0', padding: 24 }}>
+          <div className="card" style={{ width: 'calc(100% - 32px)', maxWidth: 480, borderRadius: 20, padding: 24 }}>
             <h2 style={{ marginBottom: 8 }}>Avslutt spill</h2>
             <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>Er du sikker på at du vil avslutte spillet uten vinner?</p>
             <div style={{ display: 'flex', gap: 10 }}>

@@ -127,7 +127,7 @@ export default function StatsPage() {
 
       {/* Group selector */}
       {groups.length > 0 && <p className="section-label">Velg gruppe</p>}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24, overflowY: 'auto', maxHeight: '38dvh' }}>
         {groups.map(group => {
           const color = group.color ?? DEFAULT_GROUP_COLOR
           const isSelected = selectedGroupId === group.id
@@ -185,14 +185,14 @@ export default function StatsPage() {
               Rediger
             </button>
           </div>
-          <p style={{ color: 'var(--text-muted)', marginBottom: 16, paddingLeft: 46 }}>
+          <p style={{ color: 'rgba(255,255,255,0.8)', marginBottom: 16, paddingLeft: 46 }}>
             {totalGames} spill spilt
           </p>
 
           {stats.length === 0 ? (
             <p style={{ color: 'var(--text-muted)' }}>Ingen fullførte spill ennå.</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto', maxHeight: '42dvh' }}>
               {stats.map((player, i) => (
                 <div key={player.name} className="card" style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',

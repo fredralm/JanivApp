@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getGames, saveGames, getGroups } from '../storage'
-import { computeScores, processRound } from '../gameEngine'
+import { computeScores, processRound, undoLastRound } from '../gameEngine'
 import { DEFAULT_GROUP_COLOR } from '../colors'
 import type { Game } from '../types'
 
@@ -49,9 +49,24 @@ export default function GamePage() {
     saveGame(updated)
   }
 
+  function undoRound() {
+    if (!game) return
+    if (!confirm('Angre siste runde?')) return
+    saveGame(undoLastRound(game))
+  }
+
   const sortedActive = [...activePlayers].sort((a, b) => scores[a] - scores[b])
   const elimReversed = [...game.eliminationOrder].reverse()
   const allSorted = [...sortedActive, ...elimReversed]
+
+  const startPlayer = (() => {
+    if (game.rounds.length === 0 || game.status === 'finished') return null
+    const lastRound = game.rounds[game.rounds.length - 1]
+    const minScore = Math.min(...activePlayers.map(p => lastRound.scores[p] ?? 0))
+    const tied = activePlayers.filter(p => (lastRound.scores[p] ?? 0) === minScore)
+    if (tied.length === 1) return tied[0]
+    return tied.reduce((worst, p) => scores[p] > scores[worst] ? p : worst, tied[0])
+  })()
 
   const placementLabel = (player: string): string | null => {
     if (!eliminated.has(player)) return null
@@ -62,9 +77,9 @@ export default function GamePage() {
   return (
     <main>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <button className="btn-ghost" onClick={() => navigate('/')}>← Hjem</button>
+        <button className="btn-ghost" style={{ color: 'rgba(255,255,255,0.9)' }} onClick={() => navigate('/')}>← Hjem</button>
         <span style={{
-          fontSize: 13, color: groupColor, background: `${groupColor}18`,
+          fontSize: 13, color: 'white', background: 'rgba(255,255,255,0.2)',
           padding: '4px 12px', borderRadius: 20, fontWeight: 600,
         }}>
           {game.mode === 'normal' ? 'Normalt spill' : 'Kort spill'}
@@ -72,7 +87,7 @@ export default function GamePage() {
       </div>
 
       <h1 style={{ marginBottom: 4 }}>{group?.name ?? 'Spill'}</h1>
-      <p style={{ color: 'var(--text-muted)', marginBottom: 20 }}>
+      <p style={{ color: 'rgba(255,255,255,0.8)', marginBottom: 20 }}>
         {game.status === 'active' ? `Runde ${roundNumber}` : 'Spillet er ferdig'}
       </p>
 
@@ -102,6 +117,9 @@ export default function GamePage() {
             }}>
               <div>
                 <span style={{ fontWeight: 600 }}>{player}</span>
+                {player === startPlayer && (
+                  <span style={{ marginLeft: 6, fontSize: 14 }}>★</span>
+                )}
                 {isOut && (
                   <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--danger)' }}>
                     ute – {place} plass
@@ -127,10 +145,20 @@ export default function GamePage() {
           >
             Legg til runde
           </button>
-          <button className="btn-ghost" onClick={endGameEarly}>
+          {game.rounds.length > 0 && (
+            <button className="btn-ghost" style={{ color: 'rgba(255,255,255,0.9)' }} onClick={undoRound}>
+              Angre siste runde
+            </button>
+          )}
+          <button className="btn-ghost" style={{ color: 'rgba(255,255,255,0.9)' }} onClick={endGameEarly}>
             Avslutt spill
           </button>
         </div>
+      )}
+      {game.status === 'finished' && game.rounds.length > 0 && (
+        <button className="btn-ghost" style={{ color: 'rgba(255,255,255,0.9)', width: '100%' }} onClick={undoRound}>
+          Angre siste runde
+        </button>
       )}
 
       {/* Round entry panel */}
@@ -142,7 +170,7 @@ export default function GamePage() {
           <div className="card" style={{ width: '100%', maxWidth: 480, borderRadius: '20px 20px 0 0', padding: 24 }}>
             <h2 style={{ marginBottom: 16 }}>Runde {roundNumber}</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
-              {activePlayers.map(player => (
+              {sortedActive.map(player => (
                 <div key={player} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
                   <label style={{ flex: 1 }}>{player}</label>
                   <input

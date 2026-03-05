@@ -79,3 +79,16 @@ export function processRound(game: Game, roundScores: Record<string, number>): G
 
   return { ...updatedGame, eliminationOrder: updatedEliminationOrder }
 }
+
+/**
+ * Undo the last round by replaying all previous rounds from scratch.
+ */
+export function undoLastRound(game: Game): Game {
+  if (game.rounds.length === 0) return game
+  const rounds = game.rounds.slice(0, -1)
+  let result: Game = { ...game, rounds: [], eliminationOrder: [], finalPlacements: [], status: 'active' }
+  for (const round of rounds) {
+    result = processRound(result, round.scores)
+  }
+  return result
+}

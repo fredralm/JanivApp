@@ -16,6 +16,10 @@ export default function HomePage() {
   const [deleteConfirm, setDeleteConfirm] = useState<Group | null>(null)
   const [exportModal, setExportModal] = useState(false)
   const [exportSelected, setExportSelected] = useState<Set<string>>(new Set())
+  const [exportCopied, setExportCopied] = useState(false)
+  const [importModal, setImportModal] = useState(false)
+  const [importText, setImportText] = useState('')
+  const [importError, setImportError] = useState('')
 
   function addPlayer() {
     const name = playerInput.trim()
@@ -86,21 +90,58 @@ export default function HomePage() {
     })
   }
 
-  function doExport() {
+  function buildExportJson() {
     const selectedGroups = getGroups().filter(g => exportSelected.has(g.id))
     const selectedIds = new Set(selectedGroups.map(g => g.id))
     const selectedGames = getGames().filter(g => selectedIds.has(g.groupId))
-    const data = { groups: selectedGroups, games: selectedGames }
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `janiv-eksport-${new Date().toISOString().slice(0, 10)}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    setExportModal(false)
+    return JSON.stringify({ groups: selectedGroups, games: selectedGames }, null, 2)
+  }
+
+  async function copyExport() {
+    const json = buildExportJson()
+    await navigator.clipboard.writeText(json)
+    setExportCopied(true)
+    setTimeout(() => setExportCopied(false), 2000)
+  }
+
+  async function shareExport() {
+    const json = buildExportJson()
+    const date = new Date().toISOString().slice(0, 10)
+    if (navigator.share) {
+      await navigator.share({ title: `Janiv eksport ${date}`, text: json })
+    } else {
+      await navigator.clipboard.writeText(json)
+      setExportCopied(true)
+      setTimeout(() => setExportCopied(false), 2000)
+    }
+  }
+
+  function doImport() {
+    setImportError('')
+    try {
+      const imported = JSON.parse(importText)
+      if (!Array.isArray(imported.groups) || !Array.isArray(imported.games)) {
+        setImportError('Ugyldig format — mangler groups/games')
+        return
+      }
+      const existingGroups = getGroups()
+      const existingGames = getGames()
+      const mergedGroups = [
+        ...existingGroups,
+        ...(imported.groups as Group[]).filter(g => !existingGroups.find(eg => eg.id === g.id))
+      ]
+      const mergedGames = [
+        ...existingGames,
+        ...(imported.games as Game[]).filter(g => !existingGames.find(eg => eg.id === g.id))
+      ]
+      saveGroups(mergedGroups)
+      saveGames(mergedGames)
+      setGroups(mergedGroups)
+      setImportModal(false)
+      setImportText('')
+    } catch {
+      setImportError('Ugyldig JSON — sjekk at du kopierte hele teksten')
+    }
   }
 
   const overlayStyle: React.CSSProperties = {
@@ -302,53 +343,21 @@ export default function HomePage() {
           <span style={{ flex: 1, fontSize: 16, color: 'var(--text)', fontWeight: 500, textAlign: 'left' }}>Eksporter data</span>
           <span style={{ color: 'var(--text-muted)', fontSize: 20 }}>›</span>
         </button>
-        <label style={{
-          width: '100%', background: 'transparent', padding: '14px 16px',
-          display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
-        }}>
+        <button
+          style={{
+            width: '100%', background: 'transparent', border: 'none', padding: '14px 16px',
+            display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
+          }}
+          onClick={() => { setImportText(''); setImportError(''); setImportModal(true) }}
+        >
           <span style={{
             width: 32, height: 32, borderRadius: 8, background: 'rgba(2,132,199,0.15)',
             color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 18, flexShrink: 0,
           }}>↓</span>
-          <span style={{ flex: 1, fontSize: 16, color: 'var(--text)', fontWeight: 500 }}>Importer data</span>
+          <span style={{ flex: 1, fontSize: 16, color: 'var(--text)', fontWeight: 500, textAlign: 'left' }}>Importer data</span>
           <span style={{ color: 'var(--text-muted)', fontSize: 20 }}>›</span>
-          <input type="file" accept=".json" style={{ display: 'none' }} onChange={e => {
-            const file = e.target.files?.[0]
-            if (!file) return
-            const reader = new FileReader()
-            reader.onload = ev => {
-              try {
-                const imported = JSON.parse(ev.target?.result as string)
-                if (!Array.isArray(imported.groups) || !Array.isArray(imported.games)) {
-                  alert('Ugyldig fil — mangler groups/games')
-                  return
-                }
-                const existingGroups = getGroups()
-                const existingGames = getGames()
-                const mergedGroups = [
-                  ...existingGroups,
-                  ...(imported.groups || []).filter(
-                    (g: Group) => !existingGroups.find(eg => eg.id === g.id)
-                  )
-                ]
-                const mergedGames = [
-                  ...existingGames,
-                  ...(imported.games || []).filter(
-                    (g: Game) => !existingGames.find(eg => eg.id === g.id)
-                  )
-                ]
-                saveGroups(mergedGroups)
-                saveGames(mergedGames)
-                setGroups(mergedGroups)
-                alert('Import vellykket!')
-              } catch {
-                alert('Ugyldig fil')
-              }
-            }
-            reader.readAsText(file)
-          }} />
-        </label>
+        </button>
       </div>
 
       {/* Export modal */}
@@ -391,16 +400,63 @@ export default function HomePage() {
                 })}
               </div>
             )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  className="btn-primary"
+                  onClick={copyExport}
+                  disabled={exportSelected.size === 0}
+                  style={{ flex: 1, opacity: exportSelected.size === 0 ? 0.5 : 1 }}
+                >
+                  {exportCopied ? 'Kopiert!' : 'Kopier JSON'}
+                </button>
+                <button
+                  className="btn-secondary"
+                  onClick={shareExport}
+                  disabled={exportSelected.size === 0}
+                  style={{ flex: 1, opacity: exportSelected.size === 0 ? 0.5 : 1 }}
+                >
+                  Del...
+                </button>
+              </div>
+              <button className="btn-ghost" onClick={() => setExportModal(false)}>Avbryt</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import modal */}
+      {importModal && (
+        <div style={overlayStyle}>
+          <div className="card" style={{ width: '100%', maxWidth: 400 }}>
+            <h2 style={{ marginBottom: 4 }}>Importer data</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 16 }}>
+              Lim inn eksportert JSON-tekst nedenfor
+            </p>
+            <textarea
+              value={importText}
+              onChange={e => { setImportText(e.target.value); setImportError('') }}
+              placeholder='{"groups": [...], "games": [...]}'
+              rows={8}
+              style={{
+                width: '100%', boxSizing: 'border-box', fontFamily: 'monospace', fontSize: 12,
+                background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border)',
+                borderRadius: 8, padding: 10, resize: 'vertical', marginBottom: 8,
+              }}
+            />
+            {importError && (
+              <p style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 8 }}>{importError}</p>
+            )}
             <div style={{ display: 'flex', gap: 8 }}>
               <button
                 className="btn-primary"
-                onClick={doExport}
-                disabled={exportSelected.size === 0}
-                style={{ flex: 1, opacity: exportSelected.size === 0 ? 0.5 : 1 }}
+                onClick={doImport}
+                disabled={!importText.trim()}
+                style={{ flex: 1, opacity: importText.trim() ? 1 : 0.5 }}
               >
-                Last ned
+                Importer
               </button>
-              <button className="btn-ghost" onClick={() => setExportModal(false)}>Avbryt</button>
+              <button className="btn-ghost" onClick={() => setImportModal(false)}>Avbryt</button>
             </div>
           </div>
         </div>

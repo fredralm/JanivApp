@@ -121,7 +121,7 @@ export default function StatsPage() {
   return (
     <main>
       <div style={{ marginBottom: 16 }}>
-        <button className="btn-ghost" onClick={() => navigate('/')}>← Hjem</button>
+        <button className="btn-ghost" style={{ color: 'rgba(255,255,255,0.9)' }} onClick={() => navigate('/')}>← Hjem</button>
       </div>
       <h1 style={{ marginBottom: 20 }}>Statistikk</h1>
 

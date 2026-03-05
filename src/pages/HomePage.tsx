@@ -114,7 +114,7 @@ export default function HomePage() {
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <h1 style={{ fontSize: 34, fontWeight: 700, letterSpacing: -0.5 }}>Janiv Score</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 2 }}>Kortspill-poengsporing</p>
+        <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, marginTop: 2 }}>Kortspill-poengsporing</p>
       </div>
 
       {/* Groups */}

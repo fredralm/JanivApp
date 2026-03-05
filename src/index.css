@@ -90,7 +90,7 @@ input:focus, select:focus {
   font-weight: 600;
   letter-spacing: 0.8px;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.85);
   margin-bottom: 8px;
   padding: 0 4px;
 }
